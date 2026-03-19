@@ -1,5 +1,9 @@
 const projectChatUUIDs = new Set();
 
+function isProjectPage() {
+  return /^\/projects?\//.test(window.location.pathname);
+}
+
 // Fetches chats from API and identifies which belong to projects
 async function fetchProjectChats() {
   try {
@@ -52,12 +56,19 @@ function hideProjectChats() {
   chrome.storage.sync.get(['hideProjectChats'], function(result) {
     const isEnabled = result.hideProjectChats !== false;
     const chatLinks = document.querySelectorAll('a[href^="/chat/"]');
+    const onProjectPage = isProjectPage();
 
     chatLinks.forEach(link => {
       const chatUUID = link.getAttribute('href').replace('/chat/', '');
       const chatItem = link.closest('li');
 
       if (chatItem && projectChatUUIDs.has(chatUUID)) {
+        // Never hide project chats while viewing a project page.
+        if (onProjectPage) {
+          chatItem.style.display = '';
+          return;
+        }
+
         chatItem.style.display = isEnabled ? 'none' : '';
       }
     });
